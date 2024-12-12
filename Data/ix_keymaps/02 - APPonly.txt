@@ -1,0 +1,13 @@
+//Key Mapping File. Change the number at the beginning of the line to set the output note.
+
+//Octave 3
+60		(36) C
+66		(38) F#
+67		(42) G
+63		(45) Eb
+68		(46) G#
+
+//Octave 4
+61		(48) C#
+64		(49) E
+65		(51) F
