@@ -1,9 +1,19 @@
 # Ignore everything
 *
 
-# But not these files...
+# But not this file
 !.gitignore
-# etc...
 
-# ...even if they are in subdirectories
-# !*/
+# Include specific top-level folders
+!Effects/
+!Data/
+
+# Ignore everything inside these folders by default
+Effects/*
+Data/*
+
+# But include all files inside specific subdirectories
+!Effects/ix/
+!Effects/ix/**
+!Data/ix_keymaps/
+!Data/ix_keymaps/**
