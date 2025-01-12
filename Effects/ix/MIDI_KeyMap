@@ -61,6 +61,8 @@ mapFile != slider2 | 0 || reload == 1 ?
   (
     file_text(fileHandle) ? while
     (
+      // file_var() reads next numeric value from file and stores it in map[mapSize]
+      // stops reading at the first non-numeric character (in this case a space)
       file_var(fileHandle, map[mapSize]);
       file_avail(fileHandle) ? mapSize += 1;
     );
