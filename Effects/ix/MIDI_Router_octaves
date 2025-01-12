@@ -93,15 +93,6 @@ transpose = (slider6 - 4) * 12; // the octave value
 // Read octave-to-song mappings from a config file
 fileHandle = file_open(slider7);
 printf("Opening file: %s\n", slider7);
-fileHandle > 0 ?
-(
-  file_text(fileHandle) ? while  // Read each line of the file
-  (
-    file_var(fileHandle, line); // Read the current line into 'line'
-    split_line(line);
-  );
-  file_close(fileHandle);
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 @block
@@ -155,16 +146,40 @@ printf("OPcate: %s\n", slider6);
 
 // Graphical display
 @gfx 360 360
-gfx_clear = 0x000000;       // Set the full background color to black
 
-gfx_setfont(1, "Arial", 40); // Set the font
-gfx_set(1, 1, 1, 1);         // White color for text
+!gfxInitDone ?
+(
+  gfx_a = 1;
+  gfx_r = gfx_g = gfx_b = 1;
+  rowHeight = gfx_texth * 1.5;
+  colWidth = 100;
+  
+  gfxInitDone = 1;
+);
 
-gfx_x = 10; gfx_y = 10;
+
+marginL = 5;
+marginT = 15;
+
+gfx_x = marginL;
+gfx_y = 50;
+
+noteRow = count % 12;
+oct = (count / 12) | 0;
+
+octRow = ((oct / 5) | 0) * (rowHeight * 20) |  0; // 13 for spacing
+octCol = oct % 5;
+
+gfx_x = octCol * colWidth + marginL;
+gfx_y = octRow + noteRow * rowHeight + marginT;
+
+marginT = 500;
+
+fileHandle > 0 ? gfx_printf("File opened successfully\n") : gfx_printf("File failed to open\n");
 
 gfx_printf("mapSize: %d\n", mapSize);
-gfx_printf("slider7: %s\n", slider7);
-gfx_printf("octave_names[6]: %s\n", octave_names[6]);
+-- gfx_printf("slider7: %s\n", slider7);
+-- gfx_printf("octave_names[6]: %s\n", octave_names[6]);
 
 -- // slider6 containing the current octave number
 -- gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
