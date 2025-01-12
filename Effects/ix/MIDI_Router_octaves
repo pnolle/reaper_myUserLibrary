@@ -91,7 +91,6 @@ noteMax = slider5;
 transpose = (slider6 - 4) * 12; // the octave value
 
 // Read octave-to-song mappings from a config file
-mapFile = slider2;
 fileHandle = file_open(slider7);
 printf("Opening file: %s\n", slider7);
 fileHandle > 0 ?
@@ -102,7 +101,7 @@ fileHandle > 0 ?
     split_line(line);
   );
   file_close(fileHandle);
-) : mapFile = -1;
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 @block
@@ -163,5 +162,9 @@ gfx_set(1, 1, 1, 1);         // White color for text
 
 gfx_x = 10; gfx_y = 10;
 
-// slider6 containing the current octave number
-gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
+gfx_printf("mapSize: %d\n", mapSize);
+gfx_printf("slider7: %s\n", slider7);
+gfx_printf("octave_names[6]: %s\n", octave_names[6]);
+
+-- // slider6 containing the current octave number
+-- gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
