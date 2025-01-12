@@ -36,9 +36,6 @@ out_pin:none
 statNoteOn = $x90;
 statNoteOff = $x80;
 
-// display variables
-gfx_x = 0; gfx_y = 0; gfx_w = 400; gfx_h = 100; // Set up the display window size
-
 ////////////////////////////////////////////////////////////////////////////////
 @slider
 
@@ -52,7 +49,48 @@ mode = slider3;
 noteMin = slider4;
 noteMax = slider5;
 transpose = (slider6 - 4) * 12; // the octave value
+
+////////////////////////////////////////////////////////////////////////////////
+// display variables
 current_octave = slider6; // Initialize with slider6 value
+octave_names = ""; // Initialize array for song names
+gfx_x = 0; gfx_y = 0; gfx_w = 400; gfx_h = 100; // Set up the display window size
+
+// Function to find the position of '=' in a string
+function find_eq_pos(line) (
+  eqPos = -1;
+  i = 0;
+  while (i < strlen(line)) (
+    str_getchar(line, i) == 61 ? (eqPos = i; break;); // 61 is ASCII for '='
+    i += 1;
+  );
+  eqPos;
+);
+
+// Manual splitting without strmid or strchr
+function split_line(line) (
+  eqPos = -1;
+  i = 0;
+  while (i < strlen(line)) (
+    str_getchar(line, i) == 61 ? (eqPos = i; break;); // ASCII 61 = '='
+    i += 1;
+  );
+  eqPos > 0 ? (
+    octave = 0;
+    j = 0;
+    while (j < eqPos) ( // Extract part before '='
+      octave = octave * 10 + (str_getchar(line, j) - 48); // Convert char to int
+      j += 1;
+    );
+    songName = "";
+    j = eqPos + 1;
+    while (j < strlen(line)) ( // Extract part after '='
+      songName += str_getchar(line, j);
+      j += 1;
+    );
+    octave >= 0 && octave <= 10 ? (octave_names[octave] = songName; mapSize += 1;);
+  );
+);
 
 // Read octave-to-song mappings from a config file
 mapSize = 0;
@@ -60,10 +98,10 @@ mapFile = slider2;
 fileHandle = file_open(slider7);
 fileHandle > 0 ?
 (
-  file_text(fileHandle) ? while
+  file_text(fileHandle) ? while  // Read each line of the file
   (
-    file_var(fileHandle, octave_names[mapSize]);
-    file_avail(fileHandle) ? mapSize += 1;
+    file_var(fileHandle, line); // Read the current line into 'line'
+    split_line(line);
   );
   file_close(fileHandle);
 ) : mapFile = -1;
@@ -116,13 +154,11 @@ while
 );
 
 // Graphical display
-@gfx
+@gfx 360 360
 gfx_clear = 0x303030;          // Background color (dark gray)
-gfx_rect(gfx_x, gfx_y, gfx_w, gfx_h);
-gfx_setfont(1, "Arial", 20);  // Font for display
+-- gfx_rect(gfx_x, gfx_y, gfx_w, gfx_h);
+gfx_setfont(1, "Arial", 12);  // Font for display
 gfx_set(1, 1, 1, 1);          // White color
-gfx_x = 20; gfx_y = 40;
+gfx_x = 10; gfx_y = 10;
 gfx_printf("Octave: %d\n", current_octave); // Display octave number
-gfx_printf("Song: %s\n", octave_names[slider6]); // Display song name
-
-
+gfx_printf("Song AAA: %s\n", octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); // Display song name
