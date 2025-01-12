@@ -36,6 +36,10 @@ out_pin:none
 statNoteOn = $x90;
 statNoteOff = $x80;
 
+// display variables
+octave_names = 0[]; // Initialize array for song names
+mapSize = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 @slider
 
@@ -49,12 +53,6 @@ mode = slider3;
 noteMin = slider4;
 noteMax = slider5;
 transpose = (slider6 - 4) * 12; // the octave value
-
-////////////////////////////////////////////////////////////////////////////////
-// display variables
-current_octave = slider6; // Initialize with slider6 value
-octave_names = ""; // Initialize array for song names
-gfx_x = 0; gfx_y = 0; gfx_w = 400; gfx_h = 100; // Set up the display window size
 
 // Function to find the position of '=' in a string
 function find_eq_pos(line) (
@@ -93,9 +91,9 @@ function split_line(line) (
 );
 
 // Read octave-to-song mappings from a config file
-mapSize = 0;
 mapFile = slider2;
 fileHandle = file_open(slider7);
+printf("Opening file: %s\n", slider7);
 fileHandle > 0 ?
 (
   file_text(fileHandle) ? while  // Read each line of the file
@@ -153,12 +151,17 @@ while
   );
 );
 
+
+printf("OPcate: %s\n", slider6);
+
 // Graphical display
 @gfx 360 360
-gfx_clear = 0x303030;          // Background color (dark gray)
--- gfx_rect(gfx_x, gfx_y, gfx_w, gfx_h);
-gfx_setfont(1, "Arial", 12);  // Font for display
-gfx_set(1, 1, 1, 1);          // White color
+gfx_clear = 0x000000;       // Set the full background color to black
+
+gfx_setfont(1, "Arial", 40); // Set the font
+gfx_set(1, 1, 1, 1);         // White color for text
+
 gfx_x = 10; gfx_y = 10;
-gfx_printf("Octave: %d\n", current_octave); // Display octave number
-gfx_printf("Song AAA: %s\n", octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); // Display song name
+
+// slider6 containing the current octave number
+gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
