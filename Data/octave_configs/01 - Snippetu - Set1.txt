@@ -1,0 +1,3 @@
+4=CLB
+3=Ftsoys / SmartMeter
+2=RootsOARP / StellarB

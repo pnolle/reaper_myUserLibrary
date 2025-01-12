@@ -18,3 +18,5 @@ Data/*
 !Effects/ix/**
 !Data/ix_keymaps/
 !Data/ix_keymaps/**
+!Data/octave_configs/
+!Data/octave_configs/**
