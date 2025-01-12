@@ -31,6 +31,8 @@ slider7:/octave_configs:none:Octaves config
 in_pin:none
 out_pin:none
 
+mapSize = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 @init
 statNoteOn = $x90;
@@ -38,7 +40,6 @@ statNoteOff = $x80;
 
 // display variables
 octave_names = 0[]; // Initialize array for song names
-mapSize = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 @slider
@@ -56,27 +57,7 @@ function find_eq_pos(line) (
 
 // Manual splitting without strmid or strchr
 function split_line(line) (
-  eqPos = -1;
-  i = 0;
-  while (i < strlen(line)) (
-    str_getchar(line, i) == 61 ? (eqPos = i; break;); // ASCII 61 = '='
-    i += 1;
-  );
-  eqPos > 0 ? (
-    octave = 0;
-    j = 0;
-    while (j < eqPos) ( // Extract part before '='
-      octave = octave * 10 + (str_getchar(line, j) - 48); // Convert char to int
-      j += 1;
-    );
-    songName = "";
-    j = eqPos + 1;
-    while (j < strlen(line)) ( // Extract part after '='
-      songName += str_getchar(line, j);
-      j += 1;
-    );
-    octave >= 0 && octave <= 10 ? (octave_names[octave] = songName; mapSize += 1;);
-  );
+  mapSize += 1;
 );
 
 slider4 = min(max(slider4 | 0, 0), 127);  // Remove fractions and clamp to legal range
@@ -90,9 +71,26 @@ noteMin = slider4;
 noteMax = slider5;
 transpose = (slider6 - 4) * 12; // the octave value
 
+
+
 // Read octave-to-song mappings from a config file
-fileHandle = file_open(slider7);
-printf("Opening file: %s\n", slider7);
+mapFile != slider7 | 0 || reload == 1 ?
+(
+  reload = 0;
+  mapSize = 0;
+  mapFile = slider7;
+  fileHandle = file_open(slider7);
+  fileHandle > 0 ?
+  (
+    file_text(fileHandle) ? while  // Read each line of the file
+    (
+      file_var(fileHandle, line); // Read the current line into 'line'
+      split_line(line);
+    );
+    file_close(fileHandle);
+  );
+);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @block
@@ -175,11 +173,9 @@ gfx_y = octRow + noteRow * rowHeight + marginT;
 
 marginT = 500;
 
-fileHandle > 0 ? gfx_printf("File opened successfully\n") : gfx_printf("File failed to open\n");
-
 gfx_printf("mapSize: %d\n", mapSize);
--- gfx_printf("slider7: %s\n", slider7);
--- gfx_printf("octave_names[6]: %s\n", octave_names[6]);
+gfx_printf("slider7: %s\n", slider7);
+gfx_printf("octave_names[6]: %s\n", octave_names[6]);
 
 -- // slider6 containing the current octave number
 -- gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
