@@ -26,7 +26,7 @@ slider3:3<0,3,1{Off, Notes, Non-Notes, Both}>Mode
 slider4:0<0,127,1>Note Min
 slider5:127<0,127,1>Note Max
 slider6:4<0,10,1>Transpose octave (12 notes)
-slider7:/octave_configs:none:Octaves config
+-- slider7:/octave_configs:none:Octaves config
 
 in_pin:none
 out_pin:none
@@ -40,6 +40,12 @@ statNoteOff = $x80;
 
 // display variables
 octave_names = 0[]; // Initialize array for song names
+
+line = "";
+
+@gfx
+gfx_printf("Debugging file read\n");
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @slider
@@ -57,7 +63,29 @@ function find_eq_pos(line) (
 
 // Manual splitting without strmid or strchr
 function split_line(line) (
+  eqPos = -1;
+  i = 0;
+  while (i < strlen(line)) (
+    str_getchar(line, i) == 61 ? (eqPos = i; break;); // ASCII 61 = '='
+    i += 1;
+  );
+  eqPos > 0 ? (
+    octave = 0;
+    j = 0;
+    while (j < eqPos) ( // Extract part before '='
+      octave = octave * 10 + (str_getchar(line, j) - 48); // Convert char to int
+      j += 1;
+    );
+    songName = "";
+    j = eqPos + 1;
+    while (j < strlen(line)) ( // Extract part after '='
+      songName += str_getchar(line, j);
+      j += 1;
+    );
+    octave >= 0 && octave <= 10 ? (octave_names[octave] = songName; mapSize += 1;);
+  );
   mapSize += 1;
+  octave_names[6] = "YASSSS";
 );
 
 slider4 = min(max(slider4 | 0, 0), 127);  // Remove fractions and clamp to legal range
@@ -70,27 +98,6 @@ mode = slider3;
 noteMin = slider4;
 noteMax = slider5;
 transpose = (slider6 - 4) * 12; // the octave value
-
-
-
-// Read octave-to-song mappings from a config file
-mapFile != slider7 | 0 || reload == 1 ?
-(
-  reload = 0;
-  mapSize = 0;
-  mapFile = slider7;
-  fileHandle = file_open(slider7);
-  fileHandle > 0 ?
-  (
-    file_text(fileHandle) ? while  // Read each line of the file
-    (
-      file_var(fileHandle, line); // Read the current line into 'line'
-      split_line(line);
-    );
-    file_close(fileHandle);
-  );
-);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 @block
@@ -139,9 +146,6 @@ while
   );
 );
 
-
-printf("OPcate: %s\n", slider6);
-
 // Graphical display
 @gfx 360 360
 
@@ -154,6 +158,12 @@ printf("OPcate: %s\n", slider6);
   
   gfxInitDone = 1;
 );
+
+
+
+songNames[4]="CLB";
+songNames[3]="Ftsoys / SmartMeter";
+songNames[2]="RootsOARP / StellarB";
 
 
 marginL = 5;
@@ -173,9 +183,7 @@ gfx_y = octRow + noteRow * rowHeight + marginT;
 
 marginT = 500;
 
-gfx_printf("mapSize: %d\n", mapSize);
-gfx_printf("slider7: %s\n", slider7);
-gfx_printf("octave_names[6]: %s\n", octave_names[6]);
+gfx_printf("songNames[%d]: %s\n", slider6, octave_names[slider6]);
 
 -- // slider6 containing the current octave number
 -- gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
