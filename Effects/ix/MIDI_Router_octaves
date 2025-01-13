@@ -32,19 +32,18 @@ in_pin:none
 out_pin:none
 
 mapSize = 0;
+songNames = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 @init
+songNames[4]="CLB";
+songNames[3]="Ftsoys / SmartMeter";
+songNames[2]="RootsOARP / StellarB";
+
 statNoteOn = $x90;
 statNoteOff = $x80;
 
-// display variables
-octave_names = 0[]; // Initialize array for song names
-
 line = "";
-
-@gfx
-gfx_printf("Debugging file read\n");
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,10 +81,9 @@ function split_line(line) (
       songName += str_getchar(line, j);
       j += 1;
     );
-    octave >= 0 && octave <= 10 ? (octave_names[octave] = songName; mapSize += 1;);
+    octave >= 0 && octave <= 10 ? (songNames[octave] = songName; mapSize += 1;);
   );
   mapSize += 1;
-  octave_names[6] = "YASSSS";
 );
 
 slider4 = min(max(slider4 | 0, 0), 127);  // Remove fractions and clamp to legal range
@@ -159,13 +157,6 @@ while
   gfxInitDone = 1;
 );
 
-
-
-songNames[4]="CLB";
-songNames[3]="Ftsoys / SmartMeter";
-songNames[2]="RootsOARP / StellarB";
-
-
 marginL = 5;
 marginT = 15;
 
@@ -183,7 +174,5 @@ gfx_y = octRow + noteRow * rowHeight + marginT;
 
 marginT = 500;
 
-gfx_printf("songNames[%d]: %s\n", slider6, octave_names[slider6]);
-
--- // slider6 containing the current octave number
--- gfx_printf("%d - %s", slider6, octave_names[slider6] != "" ? octave_names[slider6] : "No mapping"); 
+// slider6 containing the current octave number
+gfx_printf("%d - %s", slider6, songNames[slider6] != "" ? songNames[slider6] : "No mapping"); 
