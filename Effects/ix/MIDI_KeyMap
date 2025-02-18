@@ -61,8 +61,6 @@ mapFile != slider2 | 0 || reload == 1 ?
   (
     file_text(fileHandle) ? while
     (
-      // file_var() reads next numeric value from file and stores it in map[mapSize]
-      // stops reading at the first non-numeric character (in this case a space)
       file_var(fileHandle, map[mapSize]);
       file_avail(fileHandle) ? mapSize += 1;
     );
@@ -147,14 +145,6 @@ function InitNoteNames()
   strcpy(137, "A");
   strcpy(138, "A#");
   strcpy(139, "B");
-
-  /* 
-  These strcpy calls store base note names like "C", "C#", etc., at numeric offsets starting from 128. 
-  JSFX doesn't require an explicit declaration of where strings are stored. 
-  Instead, strings are implicitly stored in a global shared string pool that persists across all functions and contexts.
-  This is why gfx_printf() below prints out the assigned note name: 
-  Because the iterator i is printed as a string, JSFX looks up the string in the shared string pool and prints it out.
-  */
   
   s = 0;
   loop
