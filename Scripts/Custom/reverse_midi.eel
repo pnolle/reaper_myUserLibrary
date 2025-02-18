@@ -1,0 +1,4 @@
+selected_midi_item = GetSelectedMediaItem(0, 0); // Get Selected MIDI Item
+Main_OnCommand(40153, 0); // Open MIDI editor
+MIDIEditor_OnCommand(MIDIEditor_GetActive(), 40019); // Reverse MIDI
+MIDIEditor_OnCommand(MIDIEditor_GetActive(), 2); // Close MIDI editor

@@ -7,14 +7,18 @@
 # Include specific top-level folders
 !Effects/
 !Data/
+!Scripts/
 !README.md
 
 # Ignore everything inside these folders by default
 Effects/*
 Data/*
+Scripts/*
 
 # But include all files inside specific subdirectories
 !Effects/ix/
 !Effects/ix/**
 !Data/ix_keymaps/
 !Data/ix_keymaps/**
+!Scripts/Custom/
+!Scripts/Custom/**
