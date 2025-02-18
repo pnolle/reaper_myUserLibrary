@@ -20,3 +20,5 @@ Data/*
 !Data/ix_keymaps/**
 !Data/octave_configs/
 !Data/octave_configs/**
+!Scripts/Custom/**
+
