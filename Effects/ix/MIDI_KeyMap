@@ -90,6 +90,12 @@ slider3 != inputNote ?
 ////////////////////////////////////////////////////////////////////////////////
 @block
 
+// This block contains masking with logical ANDs (&). This is how they work:
+// $xF0 = 240 = 0b11110000 → extract message type (upper nibble of a status byte (message type)).
+// $x0F = 15 = 0b00001111 → extract channel (lower nibble (bottom 4 bits) of a status byte (channel number)).
+// $xFF00 = 65280 = 0b11111111_00000000 → preserve high byte (velocity), clear low byte (note).
+// $x7F = 127 = 0b01111111 → keep 7 LSBs (valid MIDI range 0–127 for notes or velocity range).
+
 while
 (
   midirecv(offset, msg1, msg23) ?
@@ -107,12 +113,26 @@ while
         // Extract note value
         note = msg23 & $x7F;
 
-        // Update mapping sliders
-        slider3 = note; sliderchange(slider3);
-        slider4 = map[note]; sliderchange(slider4);
+  // Update mapping sliders (UI only):
+  // - slider3 shows the incoming note (input) so you can inspect it
+  // - slider4 shows the mapped output note
+  // These sliders are hidden from the FX list (label starts with "-"),
+  // they are for UI/inspection and don't form the fast data-path.
+  slider3 = note; sliderchange(slider3);
+  slider4 = map[note]; sliderchange(slider4);
 
-        // Substitute note value and pass on modified message
-        midisend(offset, msg1, (msg23 & $xFF00) | map[note]);
+  // Prepare and send the modified MIDI message:
+  // midisend(offset, msg1, msg23)
+  // - offset: same offset as received (timing)
+  // - msg1: status byte (type + channel), e.g. 0x9n for Note On
+  // - msg23: packed data bytes: (data2 << 8) | data1  (velocity in high byte, note in low byte)
+  //
+  // We want to replace data1 (the note value) with map[note] while keeping data2 (velocity)
+  // (msg23 & $xFF00) clears the low byte and preserves the high byte (velocity).
+  // The '|' operator is a bitwise OR — it combines the preserved high byte
+  // with the new low byte (mapped note). We mask map[note] to 7 bits to be safe.
+  // Example: new_msg23 = (velocity << 8) | mapped_note
+  midisend(offset, msg1, (msg23 & $xFF00) | (map[note] & $x7F));
       )
       :
       (
