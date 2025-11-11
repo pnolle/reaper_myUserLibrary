@@ -61,11 +61,13 @@ mapFile != slider2 | 0 || reload == 1 ?
     // Loop while file has text
     file_text(fileHandle) ? while
     (
+      // Read input note, then output note from the same line
       // file_var(fileHandle, map[mapSize]) reads the first whitespace-delimited number
-      // From "0		(0) C" it extracts only 0, ignoring text after whitespace
-      // Array index = input note, stored value = output note
-      file_var(fileHandle, map[mapSize]);
-      file_avail(fileHandle) ? mapSize += 1 : 0; // Increment array index if more lines
+      // our mapping file is formatted as "inputNote outputNote" per line
+      file_var(fileHandle, inputN);
+      file_var(fileHandle, outputN);
+      map[inputN] = outputN;  // Directly set the mapping
+      file_avail(fileHandle) ? mapSize += 1;
     );
     file_close(fileHandle);
   ) : mapFile = -1; // If file open failed, mark mapFile as invalid
