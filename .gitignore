@@ -18,6 +18,8 @@ Scripts/*
 # But include all files inside specific subdirectories
 !Effects/ix/
 !Effects/ix/**
+!Data/ix_keymutes/
+!Data/ix_keymutes/**
 !Data/ix_keymaps/
 !Data/ix_keymaps/**
 !Scripts/Custom/
