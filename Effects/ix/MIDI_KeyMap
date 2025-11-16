@@ -20,6 +20,8 @@ slider2:/ix_keymaps:none:Mapping File
 slider3:0<0,127,1{0: C0,1: C#0,2: D0,3: Eb0,4: E0,5: F0,6: F#0,7: G0,8: G#0,9: A0,10: Bb0,11: B0,12: C1,13: C#1,14: D1,15: Eb1,16: E1,17: F1,18: F#1,19: G1,20: G#1,21: A1,22: Bb1,23: B1,24: C2,25: C#2,26: D2,27: Eb2,28: E2,29: F2,30: F#2,31: G2,32: G#2,33: A2,34: Bb2,35: B2,36: C3,37: C#3,38: D3,39: Eb3,40: E3,41: F3,42: F#3,43: G3,44: G#3,45: A3,46: Bb3,47: B3,48: C4,49: C#4,50: D4,51: Eb4,52: E4,53: F4,54: F#4,55: G4,56: G#4,57: A4,58: Bb4,59: B4,60: C5,61: C#5,62: D5,63: Eb5,64: E5,65: F5,66: F#5,67: G5,68: G#5,69: A5,70: Bb5,71: B5,72: C6,73: C#6,74: D6,75: Eb6,76: E6,77: F6,78: F#6,79: G6,80: G#6,81: A6,82: Bb6,83: B6,84: C7,85: C#7,86: D7,87: Eb7,88: E7,89: F7,90: F#7,91: G7,92: G#7,93: A7,94: Bb7,95: B7,96: C8,97: C#8,98: D8,99: Eb8,100: E8,101: F8,102: F#8,103: G8,104: G#8,105: A8,106: Bb8,107: B8,108: C9,109: C#9,110: D9,111: Eb9,112: E9,113: F9,114: F#9,115: G9,116: G#9,117: A9,118: Bb9,119: B9,120: C10,121: C#10,122: D10,123: Eb10,124: E10,125: F10,126: F#10,127: G10}>-Note In
 slider4:0<0,127,1{0: C0,1: C#0,2: D0,3: Eb0,4: E0,5: F0,6: F#0,7: G0,8: G#0,9: A0,10: Bb0,11: B0,12: C1,13: C#1,14: D1,15: Eb1,16: E1,17: F1,18: F#1,19: G1,20: G#1,21: A1,22: Bb1,23: B1,24: C2,25: C#2,26: D2,27: Eb2,28: E2,29: F2,30: F#2,31: G2,32: G#2,33: A2,34: Bb2,35: B2,36: C3,37: C#3,38: D3,39: Eb3,40: E3,41: F3,42: F#3,43: G3,44: G#3,45: A3,46: Bb3,47: B3,48: C4,49: C#4,50: D4,51: Eb4,52: E4,53: F4,54: F#4,55: G4,56: G#4,57: A4,58: Bb4,59: B4,60: C5,61: C#5,62: D5,63: Eb5,64: E5,65: F5,66: F#5,67: G5,68: G#5,69: A5,70: Bb5,71: B5,72: C6,73: C#6,74: D6,75: Eb6,76: E6,77: F6,78: F#6,79: G6,80: G#6,81: A6,82: Bb6,83: B6,84: C7,85: C#7,86: D7,87: Eb7,88: E7,89: F7,90: F#7,91: G7,92: G#7,93: A7,94: Bb7,95: B7,96: C8,97: C#8,98: D8,99: Eb8,100: E8,101: F8,102: F#8,103: G8,104: G#8,105: A8,106: Bb8,107: B8,108: C9,109: C#9,110: D9,111: Eb9,112: E9,113: F9,114: F#9,115: G9,116: G#9,117: A9,118: Bb9,119: B9,120: C10,121: C#10,122: D10,123: Eb10,124: E10,125: F10,126: F#10,127: G10}>-Note Out
 slider5:0<0,1,1{---,Reload Now}>Reload Mapping
+slider6:0<0,127,1>debug1
+slider7:0<0,127,1>debug2
 
 in_pin:none
 out_pin:none
@@ -35,6 +37,7 @@ while
 );
 
 mapFile = -1;
+mapSize = 0; // Init counter for number of entries parsed from file  
 
 statNoteOn = $x90;
 statNoteOff = $x80;
@@ -53,30 +56,58 @@ slider5 == 1 ?
 mapFile != slider2 | 0 || reload == 1 ?
 (
   reload = 0; // Clear the reload flag
-  mapSize = 0; // Reset counter for number of entries parsed from file  
   mapFile = slider2; // Store current file path to detect future changes
-  fileHandle = file_open(slider2); // Open the mapping file for reading
-  fileHandle > 0 ?
+  
+  // Initialize all mappings to identity (input note = output note)
+  i = 0;
+  loop
   (
-    // Loop while file has text
+    128,
+    map[i] = i;
+    i += 1;
+  );
+  
+  fileHandle = file_open(slider2); // Open the mapping file for reading
+  
+  (fileHandle > 0) ?
+  (
+    // Loop while file has text: read lines in format "inputNote=outputNote (comment)"
     file_text(fileHandle) ? while
     (
-      // Read input note, then output note from the same line
-      // file_var(fileHandle, map[mapSize]) reads the first whitespace-delimited number
-      // our mapping file is formatted as "inputNote outputNote" per line
-      file_var(fileHandle, inputN);
-      file_var(fileHandle, outputN);
-      map[inputN] = outputN;  // Directly set the mapping
-      file_avail(fileHandle) ? mapSize += 1;
+      file_string(fileHandle, mappingLine);    // Read entire line as string
+
+      
+      // DEBUG: Show line string length
+      slider6 = strlen(mappingLine); sliderchange(slider6);
+      
+      // Try matching the pattern from the full line
+      matched = match("%d=%d", mappingLine, inputN, outputN);
+      
+      // Show result: if matched, show inputN; otherwise show 127
+      slider7 = matched > 0 ? inputN : 127;
+      sliderchange(slider7);
+      
+      // If match succeeded and range is valid, set mapping
+      (matched > 0 &&
+       inputN >= 0 && inputN < 128 && outputN >= 0 && outputN < 128) ?
+      (
+        map[inputN] = outputN
+      ) : 0
     );
-    file_close(fileHandle);
-  ) : mapFile = -1; // If file open failed, mark mapFile as invalid
+    file_close(fileHandle)
+  )
+  :
+  (
+    mapFile = -1
+  );
+  
+  // Count how many non-identity mappings exist (for display purposes)
   numMappings = 0;
   i = 0;
   loop
   (
     128,
-    map[i] != i ? numMappings += 1;
+    map[i] != i ? (numMappings += 1) : 0;
     i += 1;
   );
     
@@ -157,7 +188,8 @@ while
 function InitNoteNames()
   local(s, n, o)
 (
-  // Set these up so we can get the note string by (note % 12) + 128
+  // First: Pre-populate string slots 128-139 with the 12 note names (C, C#, D, etc.)
+  // These are base note names for a single octave, stored at fixed string indices.
   strcpy(128, "C");
   strcpy(129, "C#");
   strcpy(130, "D");
@@ -170,14 +202,22 @@ function InitNoteNames()
   strcpy(137, "A");
   strcpy(138, "A#");
   strcpy(139, "B");
+
   
+  // Second loop: Build full note name strings for all MIDI notes (0-127).
+  // For each MIDI note s (0..127):
+  //   - n = s % 12 gives the note within the octave (0=C, 1=C#, ..., 11=B)
+  //   - o = (s / 12) | 0 gives the octave number (0..10 for notes 0..127)
+  //   - sprintf formats e.g. "C5" into string slot s (so slot 60 contains "C5", slot 61 contains "C#5", etc.)
+  //   - n + 128 looks up the base note name (C, C#, etc.) from the pre-populated slots above
+  // This loop needs to build names for ALL 128 MIDI notes, not just loaded mappings.
   s = 0;
   loop
   (
     128,
     n = s % 12;
     o = (s / 12) | 0;
-    sprintf(s, "%s%d", n + 128, o); // n + 128 is the base string "C", "C#" etc. defined above
+    sprintf(s, "%s%d", n + 128, o); // Combines base note name (e.g. "C#") with octave (e.g. 5) → "C#5"
     s += 1;
   );
 );
@@ -209,23 +249,37 @@ marginT = 30;
 numMappings > 0 ?
 (
   i = 0;
+  // Display loop: iterate through ALL 128 MIDI notes and draw only non-identity mappings.
+  // For each MIDI note i (0..127):
+  //   - Compute which grid position to draw (row/column layout based on octave)
+  //   - If map[i] != i (i.e., this note is remapped), display "inputNote -> outputNote"
+  //   - count tracks how many mappings we've displayed (used for grid positioning)
   loop
   (
     128,
     
+    // Calculate grid position for display:
+    // The notes are displayed in a 5-column layout (5 octaves per row)
+    // noteRow: which row within an octave (0-11 = C to B)
+    // oct: which octave (0-10)
+    // octRow: pixel Y position for this octave (13 rows per octave block for spacing)
+    // octCol: pixel X position for this octave column (0-4)
     noteRow = count % 12;
     oct = (count / 12) | 0;
-
-    octRow = ((oct / 5) | 0) * (rowHeight * 13) |  0; // 13 for spacing
+    
+    octRow = ((oct / 5) | 0) * (rowHeight * 13) |  0; // 13 rows spacing between octave blocks
     octCol = oct % 5;
-
+    
     gfx_x = octCol * colWidth + marginL;
     gfx_y = octRow + noteRow * rowHeight + marginT;
     
+    // Only display if this note is remapped (not identity mapping):
     map[i] != i ?
     (
       count += 1;
-      gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
+      // gfx_printf uses string slots i and map[i] (e.g. slot 60 = "C5", slot 67 = "G5")
+      // Format: "C5 -> G5" showing input note name and mapped output note name
+      gfx_printf("%s -> %s\n", i, map[i]);
     );
     
     i += 1;
@@ -237,3 +291,5 @@ numMappings > 0 ?
   gfx_y = marginT;
   gfx_drawstr("Nothing to see here.");
 );
+
+gfx_printf("LALALA %s\n", mappingLine);

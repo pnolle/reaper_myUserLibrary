@@ -3,13 +3,13 @@
 //<inputNote> <outputNote> (the rest will be ignored)
 
 //Octave 3
-36 60 (C)
-38 66 (F#)
-42 67 (G)
-45 63 (Eb)
-46 68 (G#)
+36=60 (C)
+38=66 (F#)
+42=67 (G)
+45=63 (Eb)
+46=68 (G#)
 
 //Octave 4
-48 61 (C#)
-49 64 (E)
-51 65 (F)
+48=61 (C#)
+49=64 (E)
+51=65 (F)
