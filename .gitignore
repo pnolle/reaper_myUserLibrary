@@ -11,7 +11,11 @@
 !README.md
 
 # Include specific files
+!reaper.ini
 !reaper-kb.ini
+!reapack.ini
+!S&M.ini
+!sws-autocoloricon.ini
 
 # Ignore everything inside these folders by default
 Effects/*
