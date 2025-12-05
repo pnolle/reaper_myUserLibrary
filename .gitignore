@@ -10,6 +10,9 @@
 !Scripts/
 !README.md
 
+# Include specific files
+!reaper-kb.ini
+
 # Ignore everything inside these folders by default
 Effects/*
 Data/*
