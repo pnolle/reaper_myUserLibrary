@@ -160,6 +160,9 @@ function InitNoteNames()
 !gfxInitDone ?
 (
   InitNoteNames();
+
+  gfx_setfont(1, "Helvetica", 20, "biu");
+
   gfx_a = 1;
   gfx_r = gfx_g = gfx_b = 1;
   rowHeight = gfx_texth * 1.5;
@@ -177,10 +180,11 @@ gfx_y = 5;
 
 gfx_drawstr("Mapping");
 
-marginT = 20;
+marginT = 25;
 gfx_line(marginL, marginT, (gfx_w/2) - 2 * marginL, marginT);
 
-marginT = 30;
+// First column: note mappings
+marginT = 35;
 numMappings > 0 ?
 (
   i = 0;
@@ -201,7 +205,7 @@ numMappings > 0 ?
     (
       count += 1;
       gfx_x = gfx_x;
-      gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
+      gfx_printf("%s -> %s | %s\n", i, map[i], octRow + noteRow); // This pulls the note names from numbered strings 0-127
     );
     
     i += 1;
@@ -213,3 +217,22 @@ numMappings > 0 ?
   gfx_y = marginT;
   gfx_drawstr("Nothing to see here.");
 );
+
+// Second column: Incoming / outgoing MIDI notes
+
+count = 0;
+marginL = 185;
+marginT = 15;
+
+gfx_x = colWidth +marginL;
+gfx_y = 5;
+
+gfx_drawstr("MIDI In -> MIDI Out");
+
+marginT = 25;
+gfx_line(marginL, marginT, (gfx_w/2) - 2 * marginL, marginT);
+
+marginT = 35;
+gfx_x = colWidth +marginL;
+gfx_y = marginT;
+gfx_printf("%s -> %s\n", slider3, slider4);
