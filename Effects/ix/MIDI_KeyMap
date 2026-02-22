@@ -181,7 +181,7 @@ gfx_y = 5;
 gfx_drawstr("Mapping");
 
 marginT = 25;
-gfx_line(marginL, marginT, (gfx_w/2) - 2 * marginL, marginT);
+gfx_line(marginL, marginT, gfx_w - 2 * marginL, marginT); // full width line for all columns
 
 // First column: note mappings
 marginT = 35;
@@ -224,15 +224,16 @@ count = 0;
 marginL = 185;
 marginT = 15;
 
-gfx_x = colWidth +marginL;
 gfx_y = 5;
 
-gfx_drawstr("MIDI In -> MIDI Out");
-
-marginT = 25;
-gfx_line(marginL, marginT, (gfx_w/2) - 2 * marginL, marginT);
+gfx_x = colWidth + marginL;
+gfx_drawstr("MIDI In");
+gfx_x = 2 * colWidth + marginL;
+gfx_drawstr("▶️ MIDI Out");
 
 marginT = 35;
-gfx_x = colWidth +marginL;
 gfx_y = marginT;
-gfx_printf("%s -> %s\n", slider3, slider4);
+gfx_x = colWidth + marginL;
+gfx_printf("%s", slider3);
+gfx_x = 2 * colWidth + marginL;
+gfx_printf("▶️ %s\n", slider4);
