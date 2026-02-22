@@ -92,8 +92,8 @@ while
   midirecv(offset, msg1, msg23) ?
   (  
     // Extract message type and channel
-    status = msg1 & $xF0;
-    channel = msg1 & $x0F;
+    status = msg1 & $xF0; // binary 11110000
+    channel = msg1 & $x0F; // binary 00001111
       
     // Is it on our channel?
     channel == inChannel ? 
@@ -102,7 +102,7 @@ while
       status == statNoteOn || status == statNoteOff ?
       (
         // Extract note value
-        note = msg23 & $x7F;
+        note = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2, while the velocity is in msg3 (msg23 >> 8)
 
         // Update mapping sliders
         slider3 = note; sliderchange(slider3);
@@ -126,7 +126,7 @@ while
 );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-@gfx 360 360
+@gfx 360 180
 
 // Set up note name table
 function InitNoteNames()
@@ -178,7 +178,7 @@ gfx_y = 5;
 gfx_drawstr("Mapping");
 
 marginT = 20;
-gfx_line(marginL, marginT, gfx_w - 2 * marginL, marginT);
+gfx_line(marginL, marginT, (gfx_w/2) - 2 * marginL, marginT);
 
 marginT = 30;
 numMappings > 0 ?
@@ -200,6 +200,7 @@ numMappings > 0 ?
     map[i] != i ?
     (
       count += 1;
+      gfx_x = gfx_x;
       gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
     );
     
