@@ -40,6 +40,20 @@ mapFile = -1;
 statNoteOn = $x90;
 statNoteOff = $x80;
 
+// note history - allocate with large buffer starting at index 200 to avoid map overlap
+historySize = 16;
+historyOffset = 200;  // Start history at offset 200 in memory
+historyIndex = 0;      // Current write position
+lastNote = -1;       // To track the last note for note-off handling
+
+// Explicitly initialize history array with buffer space
+i = 0;
+loop(300,  // Allocate larger range
+  history[i] = 0;
+  i += 1;
+);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 @slider
 inChannel = slider1;
@@ -103,6 +117,11 @@ while
       (
         // Extract note value
         note = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2, while the velocity is in msg3 (msg23 >> 8)
+
+        // Add a new value in note history array (overwrites oldest)
+        history[historyOffset + historyIndex] = note;
+        // historyIndex = (historyIndex + 1) % historySize;
+        lastNote = note;
 
         // Update mapping sliders
         slider3 = note; sliderchange(slider3);
@@ -205,7 +224,7 @@ numMappings > 0 ?
     (
       count += 1;
       gfx_x = gfx_x;
-      gfx_printf("%s -> %s | %s\n", i, map[i], octRow + noteRow); // This pulls the note names from numbered strings 0-127
+      gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
     );
     
     i += 1;
@@ -233,7 +252,38 @@ gfx_drawstr("▶️ MIDI Out");
 
 marginT = 35;
 gfx_y = marginT;
+
+// print values
 gfx_x = colWidth + marginL;
-gfx_printf("%s", slider3);
+gfx_printf("%s", lastNote);
+
 gfx_x = 2 * colWidth + marginL;
-gfx_printf("▶️ %s\n", slider4);
+gfx_printf("▶️ %s\n", map[lastNote]);
+
+
+// // To display (iterate backwards from most recent):
+// i = historySize - 1;
+// loop(historySize,
+//   // positioning
+//   noteRow = count % 12;
+//   oct = (count / 12) | 0;
+
+//   octRow = ((oct / 5) | 0) * (rowHeight * 13) |  0; // 13 for spacing
+//   octCol = oct % 5;
+
+//   gfx_x = octCol * colWidth + marginL;
+//   gfx_y = octRow + noteRow * rowHeight + marginT;
+
+//   // reading note history
+//   idx = (historyIndex + i) % historySize;
+  
+//   // print values
+//   gfx_x = colWidth + marginL;
+//   gfx_printf("%s", history[idx]);
+
+//   gfx_x = 2 * colWidth + marginL;
+//   gfx_printf("▶️ %s\n", map[history[idx]]);
+
+//   i -= 1;
+//   count += 1;
+// );
