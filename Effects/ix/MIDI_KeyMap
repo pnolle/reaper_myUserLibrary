@@ -56,6 +56,11 @@ historySize = 10;
 historyOffset = 130;    // Start history at offset in memory behind map which is 0-127
 historyIndex = 0;      // Current write position
 
+// CC mapping storage: array to store CC remappings
+// Format per entry: [in_ch, in_cc, out_ch, out_cc] - 4 values per mapping
+ccMapOffset = 150;
+ccMapCount = 0;
+
 InitNoteHistory();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,28 +77,57 @@ slider3 == 1 ?
 mapFile != slider2 | 0 || reload == 1 ?
 (
   reload = 0;
-  mapSize = 0;
   mapFile = slider2;
+  
+  // Reset map to identity (all notes map to themselves)
+  i = 0;
+  loop(128, map[i] = i; i += 1);
+  
+  // Reset CC mappings
+  ccMapCount = 0;
+  
   fileHandle = file_open(slider2);
   fileHandle > 0 ?
   (
-    file_text(fileHandle) ? while
+    // Read file line by line
+    while(file_string(fileHandle, line))
     (
-      file_var(fileHandle, map[mapSize]);
-      file_avail(fileHandle) ? mapSize += 1;
+      // Skip empty lines and comments
+      line[0] == 0 || line[0] == '/' ? continue;
+      
+      // Try to match CC mapping: cc IN_CHANNEL IN_CC = OUT_CHANNEL OUT_CC
+      match("cc %d %d = %d %d*", line, in_ch, in_cc, out_ch, out_cc) ?
+      (
+        ccMapCount < 16 ?
+        (
+          // Store CC mapping: [in_ch, in_cc, out_ch, out_cc]
+          ccMap[ccMapOffset + ccMapCount * 4] = in_ch;
+          ccMap[ccMapOffset + ccMapCount * 4 + 1] = in_cc;
+          ccMap[ccMapOffset + ccMapCount * 4 + 2] = out_ch;
+          ccMap[ccMapOffset + ccMapCount * 4 + 3] = out_cc;
+          ccMapCount += 1;
+        );
+      )
+      :
+      (
+        // Try to match note mapping: IN_NOTE = OUT_NOTE
+        match("%d = %d*", line, in_note, out_note) ?
+        (
+          in_note >= 0 && in_note < 128 && out_note >= 0 && out_note < 128 ?
+            map[in_note] = out_note;
+        );
+      );
     );
+    
     file_close(fileHandle);
   ) : mapFile = -1;
+  
+  // Count non-identity mappings
   numMappings = 0;
   i = 0;
-  loop
-  (
-    128,
-    map[i] != i ? numMappings += 1;
-    i += 1;
-  );
+  loop(128, map[i] != i ? numMappings += 1; i += 1);
 
-  // reset note display when selecting another mapping file because display of old notes would be wrong
+  // reset note display when selecting another mapping file
   InitNoteHistory();
 );
 
