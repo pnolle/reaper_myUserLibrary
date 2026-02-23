@@ -29,7 +29,7 @@ out_pin:none
 ////////////////////////////////////////////////////////////////////////////////
 @init
 
-//Set default mapping
+// Set default mapping
 while
 (
   map[i] = i;
@@ -38,14 +38,14 @@ while
 
 mapFile = -1;
 
+// MIDI status bytes for filtering
 statNoteOn = $x90;
 statNoteOff = $x80;
 
-// note history - allocate with large buffer starting at index 200 to avoid map overlap
+// Note history
 historySize = 10;
-historyOffset = 130;  // Start history at offset 200 in memory, behind map which is 0-127
+historyOffset = 130;    // Start history at offset in memory behind map which is 0-127
 historyIndex = 0;      // Current write position
-lastNote = -1;       // To track the last note for note-off handling
 
 // Explicitly initialize history array with -1s (invalid notes)
 i = historyOffset;
@@ -124,7 +124,6 @@ while
           // Add a new value in note history array (overwrites oldest)
           history[historyOffset + historyIndex] = note;
           historyIndex = (historyIndex + 1) % historySize;
-          lastNote = note;
         );
 
         // Update mapping sliders
