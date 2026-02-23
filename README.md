@@ -38,3 +38,49 @@ EEL2 uses a flat, linear memory pool for arrays. When you declare an array, it d
 
 * Declare all arrays in @init in the order you'll use them
 * use explicit offsets (like ``historyOffset = 200``) and add it when assigning and reading out values
+
+
+## MIDI knowledge
+
+### midisend() / midirecv()
+
+Docs: https://www.reaper.fm/sdk/js/midi.php#js_midi
+
+The first parameter to midisend isn't part of the MIDI message itself—it's the offset (in samples into the current processing block). The actual MIDI message has three bytes:
+
+* msg1 (status byte): Encodes both the message type and channel
+  * Upper 4 bits = message type (0x8-0xF)
+  * Lower 4 bits = channel (0-15)
+* msg2: First data byte (meaning depends on message type)
+* msg3: Second data byte (meaning depends on message type)
+
+Common message types:
+
+```
+0x8_ = Note Off
+0x9_ = Note On
+0xA_ = Polyphonic Pressure (Aftertouch)
+0xB_ = Control Change (CC)
+0xC_ = Program Change
+0xD_ = Channel Pressure
+0xE_ = Pitch Bend
+```
+
+So in the examples:
+
+
+* $x90 = 0x9 (Note On) + 0x0 (channel 0)
+* $xD4 = 0xD (Channel Pressure) + 0x4 (channel 4)
+
+For a CC message, you'd use 0xB_:
+
+```
+midisend(0, $xB0, 7, 100);  // offset, CC message type, channel 0, CC#7 (volume), value 100
+```
+
+Offset usage:
+```
+midisend(10,$xD4,50); // set channel pressure on channel 4 to 50, at 10 samples into current block
+```
+
+"At 10 samples into current block" means REAPER processes audio in chunks. The first parameter specifies the exact sample offset within that chunk for precise timing.
