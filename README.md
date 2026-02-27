@@ -34,10 +34,41 @@ EEL2 uses a flat, linear memory pool for arrays. When you declare an array, it d
 * history[16] also starts allocating at index 0
 * They collide and corrupt each other
 
-#### Best Practic
+#### Best Practice
 
 * Declare all arrays in @init in the order you'll use them
 * use explicit offsets (like ``historyOffset = 200``) and add it when assigning and reading out values
+
+
+### Memory layout
+
+EEL2 memory works quite different from statically-typed languages.
+
+EEL2 has a single, flat memory space. Everything—integers, strings, arrays—is just stored as numbers in a linear block of memory. There's no enforced type system.
+
+Here's how it works:
+
+1. %d interprets a value as a number → prints it as decimal
+2. %s interprets a value as a memory address → reads bytes from that address until it finds a null terminator, printing the string
+
+Example:
+
+* ccMap[idx] = 15 (some integer you stored)
+* %d prints: 15
+* %s prints: whatever string is at memory location 15
+
+Why does this work with notes but not CC?
+
+```
+Memory layout:
+Loc 0-127:    Note name strings ("C-1", "C#-1", ..., "B9")  ← Created by InitNoteNames()
+Loc 128-139:  Individual note chars ("C", "C#", etc.)
+Loc 150+:     ccMap array [in_ch, in_cc, out_ch, out_cc, ...]
+```
+
+When you map notes 0-127 to output 0-127, the values happen to match the string buffer locations, so %s accidentally works. But ccMap stores arbitrary values (1-16 channels, 0-127 CC numbers)—those values don't correspond to valid string locations, so you get garbage.
+
+JSFX/EEL2 has zero type checking, so you can accidentally read/write to any memory location. In typed languages, this would be caught at compile time.
 
 
 ## MIDI knowledge
