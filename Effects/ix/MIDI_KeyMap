@@ -96,11 +96,12 @@ mapFile != slider2 | 0 || reload == 1 ?
       line[0] == 0 || line[0] == '/' ? continue;
       
       // Try to match CC mapping: cc IN_CHANNEL IN_CC = OUT_CHANNEL OUT_CC
-      match("cc %d %d = %d %d*", line, in_ch, in_cc, out_ch, out_cc) ?
+      match("cc %d %d = %d %d", line, in_ch, in_cc, out_ch, out_cc) ?
       (
         ccMapCount < 16 ?
         (
           // Store CC mapping: [in_ch, in_cc, out_ch, out_cc]
+          // ccMapCount * 4 to make space for 4 values per mapping (e.g. Mapping 0 (ccMapCount=0): indices 150-153 / Mapping 1 (ccMapCount=1): indices 154-157 etc.)
           ccMap[ccMapOffset + ccMapCount * 4] = in_ch;
           ccMap[ccMapOffset + ccMapCount * 4 + 1] = in_cc;
           ccMap[ccMapOffset + ccMapCount * 4 + 2] = out_ch;
@@ -176,7 +177,7 @@ while
 );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-@gfx 360 180
+@gfx 360 360
 
 // Set up note name table
 function InitNoteNames()
@@ -233,10 +234,10 @@ gfx_drawstr("Mapping");
 marginT = 25;
 gfx_line(marginL, marginT, gfx_w - 2 * marginL, marginT); // full width line for all columns
 
-// First column: note mappings
 marginT = 35;
 numMappings > 0 ?
 (
+  // First column: note mappings
   i = 0;
   loop
   (
@@ -254,12 +255,37 @@ numMappings > 0 ?
     map[i] != i ?
     (
       count += 1;
-      gfx_x = gfx_x;
-      gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
+      gfx_printf("WAAA %s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
     );
     
     i += 1;
   );
+  
+  gfx_y += marginT;
+  gfx_printf("======= \n"); 
+
+  // First column: CC mappings
+  m = 0;
+  gfx_x = octCol * colWidth + marginL;
+  gfx_y += rowHeight;
+  gfx_printf("ccMapOffset %d \n", ccMapOffset); 
+  
+  gfx_x = octCol * colWidth + marginL;
+  gfx_y += rowHeight;
+  gfx_printf("m %d \n", m); 
+
+  ccMapCount < 16 ?
+  (
+    // Read out CC mapping
+    idx = ccMapOffset + m;
+    
+    gfx_x = octCol * colWidth + marginL;
+    gfx_y += rowHeight;
+    gfx_printf("m %s \n", ccMap[idx]); 
+
+    m += 1;
+  );
+
 )
 :
 (
@@ -269,7 +295,6 @@ numMappings > 0 ?
 );
 
 // Second column: Incoming / outgoing MIDI notes
-
 count = 0;
 marginL = 185;
 marginT = 15;
