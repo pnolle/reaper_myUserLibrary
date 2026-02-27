@@ -209,15 +209,14 @@ while
             (channel + 1) == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
             (
               debug_match +=1;  //midirecv
-              // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
-              // change ccNum (lower byte of msg23)
-              ccChannelOut = ccMapOut[iOut];
-              modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
-              // change ccValue
+              // change channel: channel and ccChannelOut are 0-based, but the mapping is stored as 1-based
+              ccChannelOut = ccMapOut[iOut] - 1;
+              modifiedMsg1 = (msg1 & $xF0) | ccChannelOut; // 11110000 / channel is in the lower 4 bits of msg1, so we need to zero out those and then set them to the new channel (ccChannelOut)
+              // change CC number
               ccNumOut = ccMapOut[iOut+1];
-              modifiedMsg23 |= ccChannelOut << 8; // Shift the new CC channel back to the high byte of msg23
-
-              midisend(offset, msg1, modifiedMsg23);
+              modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;  // 1111111100000000
+              
+              midisend(offset, modifiedMsg1, modifiedMsg23);
             );
           
           m += 2;
