@@ -67,8 +67,6 @@ ccValue = 0;
 ccNumOut = 0;
 ccChannelOut = 0;
 
-debug_match = 0;
-
 // CC mapping storage: array to store CC remappings
 ccMapInOffset = 150;
 ccMapInCount = 0;
@@ -123,7 +121,6 @@ mapFile != slider2 | 0 || reload == 1 ?
       (
         ccMapInCount < 16 ?
         (
-          debug_match += 1;
           // Store CC mapping: [in_ch, in_cc, out_ch, out_cc]
           // ccMapCount * 4 to make space for 4 values per mapping (e.g. Mapping 0 (ccMapCount=0): indices 150-153 / Mapping 1 (ccMapCount=1): indices 154-157 etc.)
           ccMapIn[ccMapInOffset + ccMapInCount * 2] = in_ch;
@@ -208,7 +205,6 @@ while
             // if a pair of channel (0-based) and ccNum is found as ccMapIn[iIn] (1-based), ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
             (channel + 1) == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
             (
-              debug_match +=1;  //midirecv
               // change channel: channel and ccChannelOut are 0-based, but the mapping is stored as 1-based
               ccChannelOut = ccMapOut[iOut] - 1;
               modifiedMsg1 = (msg1 & $xF0) | ccChannelOut; // 11110000 / channel is in the lower 4 bits of msg1, so we need to zero out those and then set them to the new channel (ccChannelOut)
@@ -392,13 +388,5 @@ loop(historySize,
 debugY = marginT + (historySize + 2) * rowHeight;
 
 gfx_x = colWidth + marginL;
-gfx_y = debugY;
-gfx_printf("Last MIDI - ch: %d status: %d", channel, status);
-
-gfx_x = colWidth + marginL;
 gfx_y = debugY + rowHeight;
-gfx_printf("ch%d cc %d -> ch%d cc%d .. status: %d", channel, ccNum, ccChannelOut, ccNumOut, status);
-
-gfx_x = colWidth + marginL;
-gfx_y = debugY + rowHeight * 2;
-gfx_printf("Debug match: %d", debug_match);
+gfx_printf("ch%d cc %d -> ch%d cc%d | value: %d | status: %d", channel+1, ccNum, ccChannelOut+1, ccNumOut, ccValue, status);
