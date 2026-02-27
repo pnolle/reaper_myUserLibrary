@@ -17,7 +17,9 @@ desc: MIDI Map To Key v2 [IXix / koeHnik]
 //tags: MIDI processing mapping
 //author: IXix / koeHnik (Github: @pnolle)
 
-slider1:0<0,15,1{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input Channel
+// no channel filter in place because none is needed. could be implemented again pretty easily.
+// slider1:0<0,15,1{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input Channel
+
 slider2:/ix_keymaps:none:Mapping File // reads mapping file from REAPER/Data/ix_keymaps
 slider3:0<0,1,1{---,Reload Now}>Reload Mapping
 
@@ -326,7 +328,9 @@ numMappings > 0 ?
     map[i] != i ?
     (
       count += 1;
-      gfx_printf("%s -> %s\n", i, map[i]); // This pulls the note names from numbered strings 0-127
+      gfx_printf("%s", i);
+      gfx_x = octCol * colWidth + colWidth + marginL;
+      gfx_printf("▶️ %s", map[i]); // This pulls the note names from numbered strings 0-127
     );
     
     i += 1;
@@ -345,7 +349,9 @@ numMappings > 0 ?
       gfx_x = octCol * colWidth + marginL;
       gfx_y += rowHeight;  
       // Use %d not %s - ccMapIn/Out contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
-      gfx_printf("ch%d cc%d -> ch%d cc%d", ccMapIn[iIn], ccMapIn[iIn+1], ccMapOut[iOut], ccMapOut[iOut+1]); 
+      gfx_printf("ch%d cc%d", ccMapIn[iIn], ccMapIn[iIn+1]); 
+      gfx_x = octCol * colWidth + colWidth + marginL;
+      gfx_printf("▶️ ch%d cc%d", ccMapOut[iOut], ccMapOut[iOut+1]); 
     );
 
     m += 2;
@@ -415,5 +421,5 @@ ccActive == 1 ?
   );
   gfx_printf("ch%d cc %d", channel+1, ccNum);
   gfx_x = 2 * colWidth + marginL;
-  gfx_printf("▶️ ch%d cc%d | value: %d | status: %d", ccChannelOut+1, ccNumOut, ccValue, status);
+  gfx_printf("▶️ ch%d cc%d | value: %d ... status: %d", ccChannelOut+1, ccNumOut, ccValue, status);
 );
