@@ -57,6 +57,16 @@ historySize = 10;
 historyOffset = 130;    // Start history at offset in memory behind map which is 0-127
 historyIndex = 0;      // Current write position
 
+// globals
+status = 0;
+channel = 0;
+ccNum = 0;
+ccValue = 0;
+ccNumOut = 0;
+ccValueOut = 0;
+
+debug_match = 0;
+
 // CC mapping storage: array to store CC remappings
 ccMapInOffset = 150;
 ccMapInCount = 0;
@@ -177,6 +187,8 @@ while
       )
       :
       (
+        debug_match +=1;  // not a note
+
         // if it's a CC, alter mapped CC values
         status == statCC ?
         (
@@ -197,9 +209,11 @@ while
             (
               // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
               // change ccNum (lower byte of msg23)
-              modifiedMsg23 = (msg23 & $xFF00) | ccMapOut[iOut+1];
+              ccNumOut = ccMapOut[iOut];
+              modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
               // change ccValue
-              modifiedMsg23 |= ccMapOut[iOut+1] << 8; // Shift the new CC value back to the high byte of msg23
+              ccValueOut = ccMapOut[iOut+1];
+              modifiedMsg23 |= ccValueOut << 8; // Shift the new CC value back to the high byte of msg23
 
               midisend(offset, msg1, modifiedMsg23);
             );
@@ -371,9 +385,24 @@ loop(historySize,
     gfx_printf("%s", history[idx]);
 
     gfx_x = 2 * colWidth + marginL;
-    gfx_printf("▶️ %s\n", map[history[idx]]);
+    gfx_printf("▶️ %s ... status: %d ? %d : %d", map[history[idx]], status, statNoteOn, statNoteOff);
   );
 
   i -= 1;
   count += 1;
 );
+
+// Debug display below - use fresh positions, don't reuse octRow/noteRow
+debugY = marginT + (historySize + 2) * rowHeight;
+
+gfx_x = colWidth + marginL;
+gfx_y = debugY;
+gfx_printf("Last MIDI - ch: %d status: %d", channel, status);
+
+gfx_x = colWidth + marginL;
+gfx_y = debugY + rowHeight;
+gfx_printf("CC: %d -> %d (val: %d -> %d)", ccNum, ccNumOut, ccValue, ccValueOut);
+
+gfx_x = colWidth + marginL;
+gfx_y = debugY + rowHeight * 2;
+gfx_printf("Non-note msgs: %d", debug_match);
