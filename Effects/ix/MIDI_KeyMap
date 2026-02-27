@@ -24,8 +24,10 @@ slider3:0<0,1,1{---,Reload Now}>Reload Mapping
 in_pin:none
 out_pin:none
 
+
 ////////////////////////////////////////////////////////////////////////////////
 @init
+ext_midi_bus = 1.0; // enables all 16 MIDI channels/buses for this JSFX
 
 function InitNoteHistory()
   local(i)
@@ -157,18 +159,19 @@ mapFile != slider2 | 0 || reload == 1 ?
 
 ////////////////////////////////////////////////////////////////////////////////
 @block
-
 while
 (
   midirecv(offset, msg1, msg23) ?
   (  
+    debug_match +=1;  //midirecv
+
     // Extract message type and channel
     status = msg1 & $xF0; // binary 11110000
     channel = msg1 & $x0F; // binary 00001111
       
-    // Is it on our channel?
-    channel == inChannel ? 
-    (
+    // // Is it on our channel?
+    // channel == inChannel ? 
+    // (
       // Is it a note event?
       status == statNoteOn || status == statNoteOff ?
       (
@@ -184,52 +187,46 @@ while
 
         // Substitute note value and pass on modified message
         midisend(offset, msg1, (msg23 & $xFF00) | map[note]);
-      )
-      :
-      (
-        debug_match +=1;  // not a note
-
-        // if it's a CC, alter mapped CC values
-        status == statCC ?
-        (
-          // Extract cc number and value
-          ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
-          ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
-
-          m = 0;
-          loop
-          (
-            ccMapInCount,    // Loop only as many times as we have entries
-            
-            // Read out CC mapping
-            iIn = ccMapInOffset + m;
-            iOut = ccMapOutOffset + m;
-            // if a pair of inChannel and ccNum is found as ccMapIn[iIn], ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
-            channel == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
-            (
-              // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
-              // change ccNum (lower byte of msg23)
-              ccNumOut = ccMapOut[iOut];
-              modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
-              // change ccValue
-              ccValueOut = ccMapOut[iOut+1];
-              modifiedMsg23 |= ccValueOut << 8; // Shift the new CC value back to the high byte of msg23
-
-              midisend(offset, msg1, modifiedMsg23);
-            );
-          );
-
-          m += 2;
-        )
-        :
-        (
-          midisend(offset, msg1, msg23); // Not a note, pass thru
-        );
-      );
+      // );
     )
     :
     (
-      midisend(offset, msg1, msg23); // Not on our channel, pass thru
+      // if it's a CC, alter mapped CC values
+      status == statCC ?
+      (
+        // Extract cc number and value
+        ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
+        ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
+
+        m = 0;
+        loop
+        (
+          ccMapInCount,    // Loop only as many times as we have entries
+          
+          // Read out CC mapping
+          iIn = ccMapInOffset + m;
+          iOut = ccMapOutOffset + m;
+          // if a pair of inChannel and ccNum is found as ccMapIn[iIn], ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
+          channel == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
+          (
+            // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
+            // change ccNum (lower byte of msg23)
+            ccNumOut = ccMapOut[iOut];
+            modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
+            // change ccValue
+            ccValueOut = ccMapOut[iOut+1];
+            modifiedMsg23 |= ccValueOut << 8; // Shift the new CC value back to the high byte of msg23
+
+            midisend(offset, msg1, modifiedMsg23);
+          );
+          
+          m += 2;
+        );
+      )
+      :
+      (
+        midisend(offset, msg1, msg23); // Not a note on our channel and not a cc
+      );
     );
     
     1; // Force loop to continue until all messages have been processed
