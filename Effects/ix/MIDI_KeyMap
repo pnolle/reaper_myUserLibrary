@@ -48,8 +48,9 @@ while
 mapFile = -1;
 
 // MIDI status bytes for filtering
-statNoteOn = $x90;
-statNoteOff = $x80;
+statNoteOn = $x90;  // 10010000 (1001 = Note On, 0000 = lower 4 bits for channel)
+statNoteOff = $x80; // 10000000 (1000 = Note Off, 0000 = lower 4 bits for channel)
+statCC = $xB0;  // 10110000 (1011 = Control Change, 0000 = lower 4 bits for channel)
 
 // Note history
 historySize = 10;
@@ -69,8 +70,6 @@ out_ch = 0;
 out_cc = 0;
 in_note = 0;
 out_note = 0;
-
-debug_match = 0;
 
 InitNoteHistory();
 
@@ -178,31 +177,40 @@ while
       )
       :
       (
-        // TODO: alter mapped CC values
-        midisend(offset, msg1, msg23); // Not a note, pass thru
+        // if it's a CC, alter mapped CC values
+        status == statCC ?
+        (
+          // Extract cc number and value
+          ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
+          ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
 
-
-        /*
-          // First column: CC mappings
           m = 0;
           loop
           (
-            16,
+            ccMapInCount,    // Loop only as many times as we have entries
             
             // Read out CC mapping
-            idx = ccMapOffset + m;
-            ccMap[idx] != 0 ?
+            iIn = ccMapInOffset + m;
+            iOut = ccMapOutOffset + m;
+            // if a pair of inChannel and ccNum is found as ccMapIn[iIn], ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
+            channel == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
             (
-              gfx_x = octCol * colWidth + marginL;
-              gfx_y += rowHeight;  
-              // Use %d not %s - ccMap contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
-              gfx_printf("ch%d cc%d -> ch%d cc%d", ccMap[idx], ccMap[idx+1], ccMap[idx+2], ccMap[idx+3]); 
+              // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
+              // change ccNum (lower byte of msg23)
+              modifiedMsg23 = (msg23 & $xFF00) | ccMapOut[iOut+1];
+              // change ccValue
+              modifiedMsg23 |= ccMapOut[iOut+1] << 8; // Shift the new CC value back to the high byte of msg23
+
+              midisend(offset, msg1, modifiedMsg23);
             );
-
-            m += 4;
           );
-        */
 
+          m += 2;
+        )
+        :
+        (
+          midisend(offset, msg1, msg23); // Not a note, pass thru
+        );
       );
     )
     :
@@ -312,7 +320,7 @@ numMappings > 0 ?
       gfx_x = octCol * colWidth + marginL;
       gfx_y += rowHeight;  
       // Use %d not %s - ccMapIn/Out contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
-      gfx_printf("ch%d cc%d -> ch%d cc%d ... %d", ccMapIn[iIn], ccMapIn[iIn+1], ccMapOut[iOut], ccMapOut[iOut+1], debug_match); 
+      gfx_printf("ch%d cc%d -> ch%d cc%d", ccMapIn[iIn], ccMapIn[iIn+1], ccMapOut[iOut], ccMapOut[iOut+1]); 
     );
 
     m += 2;
