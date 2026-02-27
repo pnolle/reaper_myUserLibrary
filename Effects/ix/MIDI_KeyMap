@@ -57,9 +57,10 @@ historyOffset = 130;    // Start history at offset in memory behind map which is
 historyIndex = 0;      // Current write position
 
 // CC mapping storage: array to store CC remappings
-// Format per entry: [in_ch, in_cc, out_ch, out_cc] - 4 values per mapping
-ccMapOffset = 150;
-ccMapCount = 0;
+ccMapInOffset = 150;
+ccMapInCount = 0;
+ccMapOutOffset = 170;
+ccMapOutCount = 0;
 
 // Variables for match() function
 in_ch = 0;
@@ -94,7 +95,8 @@ mapFile != slider2 | 0 || reload == 1 ?
   loop(128, map[i] = i; i += 1);
   
   // Reset CC mappings
-  ccMapCount = 0;
+  ccMapInCount = 0;
+  ccMapOutCount = 0;
   
   fileHandle = file_open(slider2);
   fileHandle > 0 ?
@@ -108,16 +110,17 @@ mapFile != slider2 | 0 || reload == 1 ?
       // Try to match CC mapping: cc IN_CHANNEL IN_CC = OUT_CHANNEL OUT_CC
       match("cc %d %d = %d %d*", line, in_ch, in_cc, out_ch, out_cc) ?
       (
-        debug_match += 1;
-        ccMapCount < 16 ?
+        ccMapInCount < 16 ?
         (
+          debug_match += 1;
           // Store CC mapping: [in_ch, in_cc, out_ch, out_cc]
           // ccMapCount * 4 to make space for 4 values per mapping (e.g. Mapping 0 (ccMapCount=0): indices 150-153 / Mapping 1 (ccMapCount=1): indices 154-157 etc.)
-          ccMap[ccMapOffset + ccMapCount * 4] = in_ch;
-          ccMap[ccMapOffset + ccMapCount * 4 + 1] = in_cc;
-          ccMap[ccMapOffset + ccMapCount * 4 + 2] = out_ch;
-          ccMap[ccMapOffset + ccMapCount * 4 + 3] = out_cc;
-          ccMapCount += 1;
+          ccMapIn[ccMapInOffset + ccMapInCount * 2] = in_ch;
+          ccMapIn[ccMapInOffset + ccMapInCount * 2 + 1] = in_cc;
+          ccMapOut[ccMapOutOffset + ccMapOutCount * 2] = out_ch;
+          ccMapOut[ccMapOutOffset + ccMapOutCount * 2 + 1] = out_cc;
+          ccMapInCount += 1;
+          ccMapOutCount += 1;
         );
       )
       :
@@ -175,7 +178,31 @@ while
       )
       :
       (
+        // TODO: alter mapped CC values
         midisend(offset, msg1, msg23); // Not a note, pass thru
+
+
+        /*
+          // First column: CC mappings
+          m = 0;
+          loop
+          (
+            16,
+            
+            // Read out CC mapping
+            idx = ccMapOffset + m;
+            ccMap[idx] != 0 ?
+            (
+              gfx_x = octCol * colWidth + marginL;
+              gfx_y += rowHeight;  
+              // Use %d not %s - ccMap contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
+              gfx_printf("ch%d cc%d -> ch%d cc%d", ccMap[idx], ccMap[idx+1], ccMap[idx+2], ccMap[idx+3]); 
+            );
+
+            m += 4;
+          );
+        */
+
       );
     )
     :
@@ -276,19 +303,19 @@ numMappings > 0 ?
   m = 0;
   loop
   (
-    16,
+    ccMapInCount,    // Loop only as many times as we have entries
     
     // Read out CC mapping
-    idx = ccMapOffset + m;
-    ccMap[idx] != 0 ?
+    iIn = ccMapInOffset + m;
+    iOut = ccMapOutOffset + m;
     (
       gfx_x = octCol * colWidth + marginL;
       gfx_y += rowHeight;  
-      // Use %d not %s - ccMap contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
-      gfx_printf("ch%d cc%d -> ch%d cc%d", ccMap[idx], ccMap[idx+1], ccMap[idx+2], ccMap[idx+3]); 
+      // Use %d not %s - ccMapIn/Out contains CC numbers, not string pointers. Because of EEL2's memory layout, using %s would print out note names that were mapped in InitNoteNames().
+      gfx_printf("ch%d cc%d -> ch%d cc%d ... %d", ccMapIn[iIn], ccMapIn[iIn+1], ccMapOut[iOut], ccMapOut[iOut+1], debug_match); 
     );
 
-    m += 4;
+    m += 2;
   );
 
 )
