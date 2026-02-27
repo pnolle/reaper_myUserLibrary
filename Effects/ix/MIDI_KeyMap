@@ -66,6 +66,7 @@ ccNum = 0;
 ccValue = 0;
 ccNumOut = 0;
 ccChannelOut = 0;
+ccActive = 0; // 0 = false, 1 = true
 
 // CC mapping storage: array to store CC remappings
 ccMapInOffset = 150;
@@ -103,10 +104,17 @@ mapFile != slider2 | 0 || reload == 1 ?
   i = 0;
   loop(128, map[i] = i; i += 1);
   
-  // Reset CC mappings
+  // Reset CC mappings and globals
   ccMapInCount = 0;
   ccMapOutCount = 0;
-  
+  status = 0;
+  channel = 0;
+  ccNum = 0;
+  ccValue = 0;
+  ccNumOut = 0;
+  ccChannelOut = 0;
+  ccActive = 0; // 0 = false, 1 = true
+
   fileHandle = file_open(slider2);
   fileHandle > 0 ?
   (
@@ -194,6 +202,7 @@ while
           ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
           ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
           
+          mappingFound = 0; // 0 = false, 1 = true
           m = 0;
           loop
           (
@@ -205,6 +214,8 @@ while
             // if a pair of channel (0-based) and ccNum is found as ccMapIn[iIn] (1-based), ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
             (channel + 1) == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
             (
+              ccActive = 1;
+              mappingFound = 1;
               // change channel: channel and ccChannelOut are 0-based, but the mapping is stored as 1-based
               ccChannelOut = ccMapOut[iOut] - 1;
               modifiedMsg1 = (msg1 & $xF0) | ccChannelOut; // 11110000 / channel is in the lower 4 bits of msg1, so we need to zero out those and then set them to the new channel (ccChannelOut)
@@ -215,14 +226,22 @@ while
               midisend(offset, modifiedMsg1, modifiedMsg23);
             );
           
-          m += 2;
+            m += 2;
+          );
+          
+          // If no mapping was found, send unaltered message only once
+          mappingFound == 0 ?
+          (
+            ccActive = 0;
+            midisend(offset, msg1, msg23);
+          );
+        )
+        :
+        (
+          midisend(offset, msg1, msg23); // Not a note on our channel and not a cc
         );
-      )
-      :
-      (
-        midisend(offset, msg1, msg23); // Not a note on our channel and not a cc
       );
-    );
+    // );
     
     1; // Force loop to continue until all messages have been processed
   );
@@ -384,9 +403,10 @@ loop(historySize,
   count += 1;
 );
 
-// Debug display below - use fresh positions, don't reuse octRow/noteRow
-debugY = marginT + (historySize + 2) * rowHeight;
-
-gfx_x = colWidth + marginL;
-gfx_y = debugY + rowHeight;
-gfx_printf("ch%d cc %d -> ch%d cc%d | value: %d | status: %d", channel+1, ccNum, ccChannelOut+1, ccNumOut, ccValue, status);
+// CC display below - position underneath maximum note history display
+ccActive == 1 ? 
+(
+  gfx_x = colWidth + marginL;
+  gfx_y = marginT + (historySize + 1) * rowHeight;
+  gfx_printf("ch%d cc %d -> ch%d cc%d | value: %d | status: %d", channel+1, ccNum, ccChannelOut+1, ccNumOut, ccValue, status);
+);
