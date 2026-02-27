@@ -65,7 +65,7 @@ channel = 0;
 ccNum = 0;
 ccValue = 0;
 ccNumOut = 0;
-ccValueOut = 0;
+ccChannelOut = 0;
 
 debug_match = 0;
 
@@ -163,12 +163,11 @@ while
 (
   midirecv(offset, msg1, msg23) ?
   (  
-    debug_match +=1;  //midirecv
-
+    
     // Extract message type and channel
     status = msg1 & $xF0; // binary 11110000
     channel = msg1 & $x0F; // binary 00001111
-      
+    
     // // Is it on our channel?
     // channel == inChannel ? 
     // (
@@ -177,48 +176,49 @@ while
       (
         // Extract note value
         note = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2, while the velocity is in msg3 (msg23 >> 8)
-
+        
         status == statNoteOn ?
         (
           // Add a new value in note history array (overwrites oldest)
           history[historyOffset + historyIndex] = note;
           historyIndex = (historyIndex + 1) % historySize;
         );
-
+        
         // Substitute note value and pass on modified message
         midisend(offset, msg1, (msg23 & $xFF00) | map[note]);
-      // );
-    )
-    :
-    (
-      // if it's a CC, alter mapped CC values
-      status == statCC ?
+        // );
+      )
+      :
       (
-        // Extract cc number and value
-        ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
-        ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
-
-        m = 0;
-        loop
+        // if it's a CC, alter mapped CC values
+        status == statCC ?
         (
-          ccMapInCount,    // Loop only as many times as we have entries
+          // Extract cc number and value
+          ccNum = msg23 & $x7F;  // mask is binary 01111111 => gives us just the note value (0-127) from msg2
+          ccValue = (msg23 >> 8) & $x7F;  // mask is binary 01111111 => gives us just the cc value (0-127) from msg3 via bitshift
           
-          // Read out CC mapping
-          iIn = ccMapInOffset + m;
-          iOut = ccMapOutOffset + m;
-          // if a pair of inChannel and ccNum is found as ccMapIn[iIn], ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
-          channel == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
+          m = 0;
+          loop
           (
-            // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
-            // change ccNum (lower byte of msg23)
-            ccNumOut = ccMapOut[iOut];
-            modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
-            // change ccValue
-            ccValueOut = ccMapOut[iOut+1];
-            modifiedMsg23 |= ccValueOut << 8; // Shift the new CC value back to the high byte of msg23
+            ccMapInCount,    // Loop only as many times as we have entries
+            
+            // Read out CC mapping
+            iIn = ccMapInOffset + m;
+            iOut = ccMapOutOffset + m;
+            // if a pair of channel (0-based) and ccNum is found as ccMapIn[iIn] (1-based), ccMapIn[iIn+1], the mapping for it will be found at ccMapOut[iOut], ccMapOut[iOut+1]
+            (channel + 1) == ccMapIn[iIn] && ccNum == ccMapIn[iIn+1] ?
+            (
+              debug_match +=1;  //midirecv
+              // The MSB contains the on/off state for note on/off or the high bit for CC messages. To keep it, we need to zero out the last 7 bits of msg23 (msg23 & $xFF00)
+              // change ccNum (lower byte of msg23)
+              ccChannelOut = ccMapOut[iOut];
+              modifiedMsg23 = (msg23 & $xFF00) | ccNumOut;
+              // change ccValue
+              ccNumOut = ccMapOut[iOut+1];
+              modifiedMsg23 |= ccChannelOut << 8; // Shift the new CC channel back to the high byte of msg23
 
-            midisend(offset, msg1, modifiedMsg23);
-          );
+              midisend(offset, msg1, modifiedMsg23);
+            );
           
           m += 2;
         );
@@ -398,8 +398,8 @@ gfx_printf("Last MIDI - ch: %d status: %d", channel, status);
 
 gfx_x = colWidth + marginL;
 gfx_y = debugY + rowHeight;
-gfx_printf("CC: %d -> %d (val: %d -> %d)", ccNum, ccNumOut, ccValue, ccValueOut);
+gfx_printf("ch%d cc %d -> ch%d cc%d .. status: %d", channel, ccNum, ccChannelOut, ccNumOut, status);
 
 gfx_x = colWidth + marginL;
 gfx_y = debugY + rowHeight * 2;
-gfx_printf("Non-note msgs: %d", debug_match);
+gfx_printf("Debug match: %d", debug_match);
