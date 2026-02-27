@@ -2,13 +2,6 @@
 
 This repo keeps the changes I made to files in my REAPER user library like updated JS FX or VST settings.
 
-## Contents
-
-* ``Data/ix_keymaps/``: MIDI keymaps for the effect ``MIDI Map To Key v2``.
-* ``Effects/ix/``: MIDI effects
-
-The repo reflects the state of these folders in version ``v7.28``. Check with later versions if it still fits.
-
 ## How to use
 
 Clone this repo into the ``Users\<usr>\Library\Application Support\REAPER\`` folder.
@@ -23,6 +16,27 @@ Install REAPER portably, meaning:
 * Move your Reaper projects from ``Users\<usr>\Music\Reaper Projects\`` into a shared folder as well, e.g. ``/Users/Shared/_ReaperProjects``
 * Find & replace all reference of the old media folder ``Users\<usr>\Music\Reaper Projects\`` in all project files and replace them with the new one ``/Users/Shared/_ReaperProjects``. ➡️ This can be a lot. I opened up the whole projects folder with VS Code and it finds 200.000 entries max. I deleted all my .rpp-bak files and still I had to go 5-6 times up to the maximum number of findings until all got replaced.
 
+## Contents
+
+* ``Data/ix_keymaps/``: MIDI keymaps for the effect ``MIDI Map To Key v2``.
+* ``Effects/ix/``: MIDI effects
+
+The repo reflects the state of these folders in version ``v7.61``. Check with later versions if it still fits.
+
+## Effects
+
+### MIDI Map To Key v2
+
+Enhanced ``Map To Key`` with
+* a more compact configuration file format
+* mapping capabilities for CC messages
+* an enhanced @gfx display that shows configured mappings as well as incoming and outgoing MIDI messages
+
+#### Best practices
+
+Use case for this JSFX: Using external drum pads with a sampler on a track, that assigns sound samples to certain notes. 
+* If the notes that are sent by the devices cannot be configured (or to leave them untouched), use the note mapping capabilities to map single notes to other ones. 
+* Use the CC mapping capabilities and "MIDI link" (not "Learn" because this works with raw MIDI data, outside the FX chain!) to a property of an effect further down in the FX chain to keep the mapping untouched while just turning this effect on and off to switch between devices.
 
 ## EEL2 language learnings
 
