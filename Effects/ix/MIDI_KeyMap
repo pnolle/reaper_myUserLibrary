@@ -361,6 +361,7 @@ numMappings > 0 ?
 
 // Second column: Incoming / outgoing MIDI notes
 count = 0;
+printCount = 0;
 marginL = 185;
 marginT = 15;
 
@@ -397,6 +398,7 @@ loop(historySize,
 
     gfx_x = 2 * colWidth + marginL;
     gfx_printf("▶️ %s ... status: %d ? %d : %d", map[history[idx]], status, statNoteOn, statNoteOff);
+    printCount += 1;
   );
 
   i -= 1;
@@ -407,6 +409,11 @@ loop(historySize,
 ccActive == 1 ? 
 (
   gfx_x = colWidth + marginL;
-  gfx_y = marginT + (historySize + 1) * rowHeight;
-  gfx_printf("ch%d cc %d -> ch%d cc%d | value: %d | status: %d", channel+1, ccNum, ccChannelOut+1, ccNumOut, ccValue, status);
+  printCount > 0 ?
+  (
+    gfx_y += rowHeight * 2;
+  );
+  gfx_printf("ch%d cc %d", channel+1, ccNum);
+  gfx_x = 2 * colWidth + marginL;
+  gfx_printf("▶️ ch%d cc%d | value: %d | status: %d", ccChannelOut+1, ccNumOut, ccValue, status);
 );
