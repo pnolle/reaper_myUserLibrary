@@ -198,17 +198,8 @@ marginT = 15;
 gfx_x = marginL;
 gfx_y = 5;
 
-// Incoming / outgoing MIDI notes
-count = 0;
-printCount = 0;
-marginL = 185;
-marginT = 15;
-
-gfx_y = 5;
-
-gfx_x = colWidth + marginL;
 gfx_drawstr("MIDI In");
-gfx_x = 2 * colWidth + marginL;
+gfx_x = colWidth + marginL;
 gfx_drawstr("▶️ MIDI Out");
 
 marginT = 35;
@@ -229,16 +220,13 @@ loop(historySize,
     octRow = ((oct / 5) | 0) * (rowHeight * 13) |  0; // 13 for spacing
     octCol = oct % 5;
 
-    gfx_x = octCol * colWidth + marginL;
     gfx_y = octRow + noteRow * rowHeight + marginT;
     
-    // print values
-    gfx_x = colWidth + marginL;
+    gfx_x = marginL;
     gfx_printf("%s", history[idx]);
 
-    gfx_x = 2 * colWidth + marginL;
+    gfx_x = colWidth + marginL;
     gfx_printf("▶️ %s ... status: %d ? %d : %d ... %d/%d", outHistory[outIdx], status, statNoteOn, statNoteOff, idx, outIdx);
-    printCount += 1;
   );
 
   i -= 1;
