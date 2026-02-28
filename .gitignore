@@ -23,6 +23,8 @@ Data/*
 Scripts/*
 
 # But include all files inside specific subdirectories
+!FXChains/
+!FXChains/**
 !Effects/ix/
 !Effects/ix/**
 !Data/ix_keymutes/
