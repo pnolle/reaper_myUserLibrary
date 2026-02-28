@@ -48,6 +48,12 @@ function InitNoteHistory()
     history[i] = -1;
     i += 1;
   );
+  // Explicitly initialize outHistory array with -1s (invalid notes)
+  i = outHistoryOffset;
+  loop(10,
+    outHistory[i] = -1;
+    i += 1;
+  );
 );
 
 // MIDI status bytes for filtering
@@ -58,6 +64,7 @@ statNoteOff = $x80; // 10000000 (1000 = Note Off, 0000 = lower 4 bits for channe
 historySize = 10;
 historyOffset = 0;    // Start history at offset in memory
 historyIndex = 0;      // Current write position
+outHistoryOffset = historyOffset + historySize; // Output history starts right after input history in memory
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The code in the @slider section gets executed following an @init, or when a parameter (slider) changes.
@@ -104,21 +111,23 @@ while
         (
           note >= noteMin && note <= noteMax ?
           (
-            status == statNoteOn ?
-            (
-              // Add a new value in note history array (overwrites oldest)
-              history[historyOffset + historyIndex] = note;
-              historyIndex = (historyIndex + 1) % historySize;
-            );
-
             // Transpose and clamp
             outNote = note;
             outNote += transpose;
             outNote < 0 ? outNote = 0; outNote > 127 ? outNote = 127;
-
+            
             // Modify MIDI message data
             msg1 = status + outChannel;
             msg23 = (msg23 & $xFF00) | outNote;
+
+            // note history
+            status == statNoteOn ?
+            (
+              // Add a new value in note history array (overwrites oldest)
+              history[historyOffset + historyIndex] = note;
+              outHistory[outHistoryOffset + historyIndex] = outNote;
+              historyIndex = (historyIndex + 1) % historySize;
+            );
           );
         );
       )
@@ -210,6 +219,7 @@ i = historySize - 1;
 loop(historySize,
   // reading note history
   idx = historyOffset + (historyIndex + i) % historySize;
+  outIdx = outHistoryOffset + (historyIndex + i) % historySize;
   history[idx] > -1 ? 
   (
     // positioning
@@ -227,7 +237,7 @@ loop(historySize,
     gfx_printf("%s", history[idx]);
 
     gfx_x = 2 * colWidth + marginL;
-    gfx_printf("▶️ %s ... status: %d ? %d : %d", map[history[idx]], status, statNoteOn, statNoteOff);
+    gfx_printf("▶️ %s ... status: %d ? %d : %d ... %d/%d", outHistory[outIdx], status, statNoteOn, statNoteOff, idx, outIdx);
     printCount += 1;
   );
 
