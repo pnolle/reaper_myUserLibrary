@@ -1,0 +1,6 @@
+// Note and CC Mapping file
+
+// Note mappings: input_note = output_note
+44 = 41     // G#3 => G5
+
+// CC mappings: cc input_channel input_cc = output_channel output_cc
