@@ -9,7 +9,7 @@
 !Data/
 !Scripts/
 !README.md
-!_backupAndInstall
+!_backupAndInstall/
 
 # Include specific files
 !reaper.ini
@@ -35,3 +35,4 @@ Scripts/*
 !Scripts/Custom/
 !Scripts/Custom/**
 !S&M.ini
+!_backupAndInstall/**
