@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SRC="/Volumes/Shared/REAPER"                # <-- alten REAPER-Ordner hier eintragen
-DEST="/Volumes/Shared/REAPER_movehouse"     # <-- Zielordner, wird neu angelegt
+SRC="/Users/Shared/REAPER"                # <-- alten REAPER-Ordner hier eintragen
+DEST="/Users/Shared/REAPER_movehouse"     # <-- Zielordner, wird neu angelegt
 
 mkdir -p "$DEST"
 
