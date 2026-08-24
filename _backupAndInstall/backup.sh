@@ -16,7 +16,7 @@ for folder in ColorThemes KeyMaps LangPack MenuSets MIDINoteNames OSC presets Pr
 done
 
 # Einzeldateien
-for file in reaper-kb.ini reaper-menu.ini reaper-mouse.ini reaper-themeconfig.ini reaper-fxtags.ini "S&M.ini" sws-autocoloricon.ini; do
+for file in reaper-kb.ini reaper-menu.ini reaper-mouse.ini reaper-themeconfig.ini reaper-fxtags.ini "S&M.ini" sws-autocoloricon.ini reapack.ini reaper-jsfx.ini reaper-recentfx.ini reaper-midihw.ini; do
   if [ -f "$SRC/$file" ]; then
     cp "$SRC/$file" "$DEST/$file"
     echo "Kopiert: $file"
